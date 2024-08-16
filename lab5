@@ -1,0 +1,97 @@
+/************************** Dashboard ***********************************/
+https://io.adafruit.com/AnaGramajo/dashboards/lab5
+
+#include <Arduino.h>
+
+/************************** Configuración ***********************************/
+
+#include "config.h"
+portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+
+// Variables globales
+
+#define B 23 // Botón
+#define P1 34 // Potenciómetro 1
+#define P2 35 // Potenciómetro 2
+volatile bool b_pressed = false;
+int pot1 = 0;
+int pot2 = 0;
+int mult = 0;
+
+// Prototipos de funciones
+void enviar_p1(int p);
+void enviar_p2(int val);
+
+// set up de los feeds
+AdafruitIO_Feed *pot_1 = io.feed("p1");
+AdafruitIO_Feed *pot_2 = io.feed("p2");
+AdafruitIO_Feed *mult_ = io.feed("m");
+
+// Interrupción 
+void IRAM_ATTR B_isr() {
+  portENTER_CRITICAL_ISR(&mux);
+    b_pressed = true;
+  portEXIT_CRITICAL_ISR(&mux);
+}
+
+void setup() {
+
+  // inicia la conexión serial
+  Serial.begin(115200);
+
+  while(! Serial);
+  Serial.print("Connecting to Adafruit IO");
+  // conectarse a io.adafruit.com
+  io.connect();
+
+  // esperar a que se conecte
+  while(io.status() < AIO_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  
+  Serial.println();
+  Serial.println(io.statusText());
+
+  pinMode(B, INPUT_PULLDOWN);
+  attachInterrupt(B, B_isr, RISING);
+
+}
+
+void loop() {
+
+  io.run();
+  
+  if (b_pressed) {
+    // se leen los potenciómetros y se escalan para obtener valores de 0 a 15
+    pot1 = map(analogRead(P1), 0, 1023, 0, 15);
+    pot2 = map(analogRead(P2), 0, 1023, 0, 15);
+    //Funciones para enviar los datos al dashboard
+    enviar_p1(pot1);
+    enviar_p2(pot2);
+    // Multiplicacion
+    mult = pot1*pot2;
+    Serial.print("sending -> ");
+    Serial.println(mult);
+    mult_->save(mult);
+
+    b_pressed = false;
+  }
+
+  delay(3000); 
+
+}
+
+// Otras funciones
+
+void enviar_p1(int p) {
+  Serial.print("sending -> ");
+  Serial.println(p);
+  pot_1->save(p);
+}
+
+void enviar_p2(int val) {
+  Serial.print("sending -> ");
+  Serial.println(val);
+  pot_2->save(val);
+}
