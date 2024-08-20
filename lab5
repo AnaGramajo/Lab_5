@@ -11,11 +11,15 @@ https://io.adafruit.com/AnaGramajo/dashboards/lab5
 /************************** Configuración ***********************************/
 
 #include "config.h"
-portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+
+portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED
+
+#define IO_USERNAME  "AnaGramajo"
+#define IO_KEY       "aio_NNfr795dzM38AZHZS6XlHZQFxViV"
 
 // Variables globales
 
-#define B 23 // Botón
+#define B 2 // Botón
 #define P1 34 // Potenciómetro 1
 #define P2 35 // Potenciómetro 2
 
@@ -41,6 +45,7 @@ int mult = 0;
 // Prototipos de funciones
 void enviar_p1(int p);
 void enviar_p2(int val);
+void mostrarNumero(int numero); 
 
 // set up de los feeds
 AdafruitIO_Feed *pot_1 = io.feed("p1");
@@ -93,22 +98,66 @@ void setup() {
   pinMode(P2, INPUT);
 }
 
-
-void limpiarDisplay() {
-  // Apaga todos los segmentos
-  digitalWrite(segA, LOW);
-  digitalWrite(segB, LOW);
-  digitalWrite(segC, LOW);
-  digitalWrite(segD, LOW);
-  digitalWrite(segE, LOW);
-  digitalWrite(segF, LOW);
-  digitalWrite(segG, LOW);
-}
-
 void mostrarNumero(int numero) {
   // Limpia el display antes de mostrar el número
   limpiarDisplay();
+
+void loop() {
+
+
+  unsigned int valorPot1 = analogRead(P1);
+  unsigned int valorPot2 = analogRead(P2);
+
+  // Convertir los valores de los potenciómetros a números hexadecimales
+  unsigned int numero1 = map(valorPot1, 0, 4095, 0, 15);  // Valor entre 0 y F
+  unsigned int numero2 = map(valorPot2, 0, 4095, 0, 15);  // Valor entre 0 y F
+
+  // Encender el primer display y mostrar el número correspondiente
+  digitalWrite(display1, HIGH);   // Encender el display 1
+  digitalWrite(display2, LOW);    // Apagar el display 2
+  mostrarNumero(numero1);         // Mostrar el número en el primer display
+  delay(5);
+
+  // Encender el segundo display y mostrar el número correspondiente
+  digitalWrite(display1, LOW);    // Apagar el display 1
+  digitalWrite(display2, HIGH);   // Encender el display 
+  mostrarNumero(numero2);         // Mostrar el número en el segundo display
+  delay(5);
+
+  io.run();
   
+  if (b_pressed) {
+    // se leen los potenciómetros y se escalan para obtener valores de 0 a 15
+    pot1 = map(analogRead(P1), 0, 1023, 0, 15);
+    pot2 = map(analogRead(P2), 0, 1023, 0, 15);
+    //Funciones para enviar los datos al dashboard
+    enviar_p1(pot1);
+    enviar_p2(pot2);
+    // Multiplicacion
+    mult = pot1*pot2;
+    Serial.print("sending -> ");
+    Serial.println(mult);
+    mult_->save(mult);
+
+    b_pressed = false;
+  }
+
+  delay(3000); 
+}
+
+// Otras funciones
+
+void enviar_p1(int p) {
+  Serial.print("sending -> ");
+  Serial.println(p);
+  pot_1->save(p);
+}
+
+void enviar_p2(int val) {
+  Serial.print("sending -> ");
+  Serial.println(val);
+  pot_2->save(val);
+}
   // Aquí defines qué segmentos encender según el número
   switch (numero) {
     case 0:
@@ -256,63 +305,4 @@ void mostrarNumero(int numero) {
       digitalWrite(segG, HIGH);
       break;
   }
-}
-
-void loop() {
-
-int valorPot1 = analogRead(P1);
-int valorPot2 = analogRead(P2);
-
-  // Convertir los valores de los potenciómetros a números hexadecimales
-  int numero1 = map(valorPot1, 0, 4095, 0, 15);  // Valor entre 0 y F
-  int numero2 = map(valorPot2, 0, 4095, 0, 15);  // Valor entre 0 y F
-
-  // Encender el primer display y mostrar el número correspondiente
-  mostrarNumero(numero1);         // Mostrar el número en el primer display
-  digitalWrite(display1, HIGH);   // Encender el display 1
-  delay(1);                       // Esperar un poco para asegurar estabilidad
-  digitalWrite(display2, LOW);    // Apagar el display 2
-  limpiarDisplay();               // Asegurarse de que todo esté apagado antes de cambiar
-
-  // Encender el segundo display y mostrar el número correspondiente
-  mostrarNumero(numero2);         // Mostrar el número en el segundo display
-  digitalWrite(display1, LOW);    // Apagar el display 1
-  delay(1);                       // Esperar un poco para asegurar estabilidad
-  digitalWrite(display2, HIGH);   // Encender el display 
-  limpiarDisplay();               // Asegurarse de que todo esté apagado antes de cambiar
-  
-}
-  io.run();
-  
-  if (b_pressed) {
-    // se leen los potenciómetros y se escalan para obtener valores de 0 a 15
-    pot1 = map(analogRead(P1), 0, 1023, 0, 15);
-    pot2 = map(analogRead(P2), 0, 1023, 0, 15);
-    //Funciones para enviar los datos al dashboard
-    enviar_p1(pot1);
-    enviar_p2(pot2);
-    // Multiplicacion
-    mult = pot1*pot2;
-    Serial.print("sending -> ");
-    Serial.println(mult);
-    mult_->save(mult);
-
-    b_pressed = false;
-  }
-
-  delay(3000); 
-}
-
-// Otras funciones
-
-void enviar_p1(int p) {
-  Serial.print("sending -> ");
-  Serial.println(p);
-  pot_1->save(p);
-}
-
-void enviar_p2(int val) {
-  Serial.print("sending -> ");
-  Serial.println(val);
-  pot_2->save(val);
 }
