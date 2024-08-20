@@ -1,3 +1,8 @@
+// Universidad del Valle
+// Digital 2
+// Ana y Dayrin
+// Contador binario con leds e interrupciones
+
 /************************** Dashboard ***********************************/
 https://io.adafruit.com/AnaGramajo/dashboards/lab5
 
@@ -13,6 +18,21 @@ portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 #define B 23 // Botón
 #define P1 34 // Potenciómetro 1
 #define P2 35 // Potenciómetro 2
+
+// Pines compartidos para los segmentos a-g
+int segA = 18;
+int segB = 19;
+int segC = 21;
+int segD = 23;
+int segE = 22;
+int segF = 5;
+int segG = 32;
+int dp = 26;
+
+// Pines para seleccionar el display activo
+int display1 = 25;  // Controla el primer display
+int display2 = 14; // Controla el segundo display
+
 volatile bool b_pressed = false;
 int pot1 = 0;
 int pot2 = 0;
@@ -56,10 +76,212 @@ void setup() {
   pinMode(B, INPUT_PULLDOWN);
   attachInterrupt(B, B_isr, RISING);
 
+// Configuración de pines para los segmentos
+  pinMode(segA, OUTPUT);
+  pinMode(segB, OUTPUT);
+  pinMode(segC, OUTPUT);
+  pinMode(segD, OUTPUT);
+  pinMode(segE, OUTPUT);
+  pinMode(segF, OUTPUT);
+  pinMode(segG, OUTPUT);
+
+  // Configuración de pines para seleccionar el display
+  pinMode(display1, OUTPUT);
+  pinMode(display2, OUTPUT);
+
+  pinMode(P1, INPUT);
+  pinMode(P2, INPUT);
+}
+
+
+void limpiarDisplay() {
+  // Apaga todos los segmentos
+  digitalWrite(segA, LOW);
+  digitalWrite(segB, LOW);
+  digitalWrite(segC, LOW);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, LOW);
+}
+
+void mostrarNumero(int numero) {
+  // Limpia el display antes de mostrar el número
+  limpiarDisplay();
+  
+  // Aquí defines qué segmentos encender según el número
+  switch (numero) {
+    case 0:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, LOW);
+      break;
+    case 1:
+      digitalWrite(segA, LOW);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, LOW);
+      digitalWrite(segG, LOW);
+      break;
+    case 2:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, LOW);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, LOW);
+      digitalWrite(segG, HIGH);
+      break;
+    case 3:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, LOW);
+      digitalWrite(segG, HIGH);
+      break;
+    case 4:
+      digitalWrite(segA, LOW);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 5:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, LOW);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 6:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, LOW);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 7:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, LOW);
+      break;
+    case 8:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 9:
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, LOW);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 10:  // A
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 11:  // B
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 12:  // C
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, LOW);
+      digitalWrite(segC, LOW);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, LOW);
+      break;
+    case 13:  // D
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, HIGH);
+      digitalWrite(segC, HIGH);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, LOW);
+      break;
+    case 14:  // E
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, LOW);
+      digitalWrite(segC, LOW);
+      digitalWrite(segD, HIGH);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+    case 15:  // F
+      digitalWrite(segA, HIGH);
+      digitalWrite(segB, LOW);
+      digitalWrite(segC, LOW);
+      digitalWrite(segD, LOW);
+      digitalWrite(segE, HIGH);
+      digitalWrite(segF, HIGH);
+      digitalWrite(segG, HIGH);
+      break;
+  }
 }
 
 void loop() {
 
+int valorPot1 = analogRead(P1);
+int valorPot2 = analogRead(P2);
+
+  // Convertir los valores de los potenciómetros a números hexadecimales
+  int numero1 = map(valorPot1, 0, 4095, 0, 15);  // Valor entre 0 y F
+  int numero2 = map(valorPot2, 0, 4095, 0, 15);  // Valor entre 0 y F
+
+  // Encender el primer display y mostrar el número correspondiente
+  mostrarNumero(numero1);         // Mostrar el número en el primer display
+  digitalWrite(display1, HIGH);   // Encender el display 1
+  delay(1);                       // Esperar un poco para asegurar estabilidad
+  digitalWrite(display2, LOW);    // Apagar el display 2
+  limpiarDisplay();               // Asegurarse de que todo esté apagado antes de cambiar
+
+  // Encender el segundo display y mostrar el número correspondiente
+  mostrarNumero(numero2);         // Mostrar el número en el segundo display
+  digitalWrite(display1, LOW);    // Apagar el display 1
+  delay(1);                       // Esperar un poco para asegurar estabilidad
+  digitalWrite(display2, HIGH);   // Encender el display 
+  limpiarDisplay();               // Asegurarse de que todo esté apagado antes de cambiar
+  
+}
   io.run();
   
   if (b_pressed) {
@@ -79,7 +301,6 @@ void loop() {
   }
 
   delay(3000); 
-
 }
 
 // Otras funciones
